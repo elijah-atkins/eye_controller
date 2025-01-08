@@ -40,25 +40,27 @@ The code uses the following servo assignments:
 # Option 1: Manual Installation
 
 Enable I2C on your Raspberry Pi:
-
-bashCopysudo raspi-config
+```
+sudo raspi-config
+```
 # Navigate to Interface Options > I2C > Enable
 
 Install required packages:
-
-bashCopysudo apt-get update
+```
+sudo apt-get update
 sudo apt-get install python3-pip python3-smbus
 pip3 install adafruit-circuitpython-pca9685 adafruit-circuitpython-motor adafruit-blinka inputs
-
+```
 Create a new directory for the project:
-
-bashCopymkdir eye_controller
+```
+mkdir eye_controller
 cd eye_controller
+```
 
 Using your preferred text editor (like nano), create a new file called eye_controller.py:
-
-bashCopynano eye_controller.py
-
+```
+nano eye_controller.py
+```
 Copy and paste the entire code into this file. Press Ctrl+X, then Y, then Enter to save in nano.
 
 The script uses the following Python modules:
