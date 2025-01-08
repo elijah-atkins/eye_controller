@@ -51,13 +51,13 @@ sudo apt-get install python3-pip python3-smbus
 pip3 install adafruit-circuitpython-pca9685 adafruit-circuitpython-servokit inputs
 ```
 
-3. Clone this repository:
-```bash
-git clone [your-repository-url]
-cd [repository-name]
+3. Copy eye_controller.py and paste contents into a new file
+```
+nano eye_controller.py
 ```
 
-4. Connect the hardware:
+
+5. Connect the hardware:
    - Connect PCA9685 to Pi's I2C pins:
      - SDA → GPIO 2 (Pin 3)
      - SCL → GPIO 3 (Pin 5)
