@@ -37,7 +37,6 @@ The code uses the following servo assignments:
 - Channel 5: Right Lower Eyelid
 
 ## Installation
-# Option 1: Manual Installation
 
 Enable I2C on your Raspberry Pi:
 ```
