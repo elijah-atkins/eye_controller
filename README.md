@@ -63,7 +63,7 @@ nano eye_controller.py
 ```
 Copy and paste the entire code into this file. Press Ctrl+X, then Y, then Enter to save in nano.
 
-The script uses the following Python modules:
+#The script uses the following Python modules:
 
 board (from adafruit-blinka)
 busio (from adafruit-blinka)
