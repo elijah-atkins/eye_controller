@@ -37,7 +37,7 @@ The code uses the following servo assignments:
 - Channel 5: Right Lower Eyelid
 
 ## Installation
-#Option 1: Manual Installation
+# Option 1: Manual Installation
 
 Enable I2C on your Raspberry Pi:
 
@@ -70,31 +70,7 @@ adafruit_motor
 inputs
 Standard Python libraries: time, math, threading, signal, sys, random
 
-#Option 2: GitHub Installation
 
-Enable I2C on your Raspberry Pi:
-
-bashCopysudo raspi-config
-# Navigate to Interface Options > I2C > Enable
-
-Install required packages:
-
-bashCopysudo apt-get update
-sudo apt-get install python3-pip python3-smbus
-pip3 install adafruit-circuitpython-pca9685 adafruit-circuitpython-motor adafruit-blinka inputs
-The script uses the following Python modules:
-
-board (from adafruit-blinka)
-busio (from adafruit-blinka)
-adafruit_pca9685
-adafruit_motor
-inputs
-Standard Python libraries: time, math, threading, signal, sys, random
-
-Copy eye_controller.py and paste contents into a new file on the pi
-```
-nano eye_controller.py
-```
 
 Connect the hardware:
    - Connect PCA9685 to Pi's I2C pins:
