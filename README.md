@@ -42,8 +42,8 @@ The code uses the following servo assignments:
 Enable I2C on your Raspberry Pi:
 ```
 sudo raspi-config
-```
 # Navigate to Interface Options > I2C > Enable
+```
 
 Install required packages:
 ```
