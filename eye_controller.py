@@ -25,12 +25,20 @@ SERVO_RANGES = {
     5: {"min": 145, "max": 155},   # Right Lower Lid (min=closed, max=open)
 }
 
-# Define mid positions for eyelids
+# Define positions for eyelids
 EYELID_MID = {
     0: SERVO_RANGES[0]["min"] + ((SERVO_RANGES[0]["max"] - SERVO_RANGES[0]["min"]) * 0.1),
     1: SERVO_RANGES[1]["max"] - ((SERVO_RANGES[1]["max"] - SERVO_RANGES[1]["min"]) * 0.5),
     4: SERVO_RANGES[4]["min"] + ((SERVO_RANGES[4]["max"] - SERVO_RANGES[4]["min"]) * 0.5),
     5: SERVO_RANGES[5]["max"] - ((SERVO_RANGES[5]["max"] - SERVO_RANGES[5]["min"]) * 0.1),
+}
+
+# Define squint positions (halfway between mid and closed)
+EYELID_SQUINT = {
+    0: EYELID_MID[0] + ((SERVO_RANGES[0]["max"] - EYELID_MID[0]) * 0.5),
+    1: EYELID_MID[1] - ((EYELID_MID[1] - SERVO_RANGES[1]["min"]) * 0.5),
+    4: EYELID_MID[4] + ((SERVO_RANGES[4]["max"] - EYELID_MID[4]) * 0.5),
+    5: EYELID_MID[5] - ((EYELID_MID[5] - SERVO_RANGES[5]["min"]) * 0.5),
 }
 
 # Create servo objects
@@ -42,12 +50,14 @@ class State:
         self.eye_position = {"x": 90, "y": 40}  # Neutral position
         self.is_blinking = False
         self.running = True
-        self.use_mid_position = True
         self.last_blink_time = time.time()
         self.blink_interval = random.uniform(4, 9)
-        self.left_trigger_value = 0  # Store trigger values (0 to 255)
+        self.left_trigger_value = 0
         self.right_trigger_value = 0
-        self.left_upper_lid_position = EYELID_MID[1] # Store lid positions
+        self.target_position = "mid"  # Track the desired eyelid position
+        self.vertical_offset = 0  # Track the vertical offset for upper lids
+        # Initialize with mid positions plus neutral vertical offset
+        self.left_upper_lid_position = EYELID_MID[1]
         self.right_upper_lid_position = EYELID_MID[4]
 
 state = State()
@@ -71,12 +81,34 @@ def move_servo(servo_num, angle):
     servos[servo_num].angle = clamped_angle
     return True
 
+def get_base_positions(target_position):
+    """Get the base positions for the eyelids based on target position"""
+    if target_position == "squint":
+        return EYELID_SQUINT
+    elif target_position == "mid":
+        return EYELID_MID
+    elif target_position == "open":
+        return {
+            0: SERVO_RANGES[0]["min"],
+            1: SERVO_RANGES[1]["max"],
+            4: SERVO_RANGES[4]["min"],
+            5: SERVO_RANGES[5]["max"]
+        }
+    else:  # closed
+        return {
+            0: SERVO_RANGES[0]["max"],
+            1: SERVO_RANGES[1]["min"],
+            4: SERVO_RANGES[4]["max"],
+            5: SERVO_RANGES[5]["min"]
+        }
+
 def update_eyelid_position(side="left", trigger_value=0):
     """Update eyelid position based on trigger value (0-255)"""
     if side == "left":
         if trigger_value < 10:  # Return to stored position when released
             move_servo(1, state.left_upper_lid_position)
-            move_servo(0, SERVO_RANGES[0]["min"])
+            base_positions = get_base_positions(state.target_position)
+            move_servo(0, base_positions[0])
         else:
             upper_angle = map_value(trigger_value, 0, 255, 
                                   SERVO_RANGES[1]["max"], SERVO_RANGES[1]["min"])
@@ -87,7 +119,8 @@ def update_eyelid_position(side="left", trigger_value=0):
     else:
         if trigger_value < 10:  # Return to stored position when released
             move_servo(4, state.right_upper_lid_position)
-            move_servo(5, SERVO_RANGES[5]["max"])
+            base_positions = get_base_positions(state.target_position)
+            move_servo(5, base_positions[5])
         else:
             upper_angle = map_value(trigger_value, 0, 255, 
                                   SERVO_RANGES[4]["min"], SERVO_RANGES[4]["max"])
@@ -97,41 +130,95 @@ def update_eyelid_position(side="left", trigger_value=0):
             move_servo(5, lower_angle)
 
 def set_eyelids_position(position="open"):
-    """Set both eyelids position: 'open', 'mid', or 'closed'"""
-    if position == "closed":
-        move_servo(0, SERVO_RANGES[0]["max"])  # Left Lower
-        move_servo(1, SERVO_RANGES[1]["min"])  # Left Upper
-        move_servo(4, SERVO_RANGES[4]["max"])  # Right Upper
-        move_servo(5, SERVO_RANGES[5]["min"])  # Right Lower
-    elif position == "mid":
-        move_servo(0, EYELID_MID[0])  # Left Lower
-        move_servo(1, EYELID_MID[1])  # Left Upper
-        move_servo(4, EYELID_MID[4])  # Right Upper
-        move_servo(5, EYELID_MID[5])  # Right Lower
-    else:  # open
-        move_servo(0, SERVO_RANGES[0]["min"])  # Left Lower
-        move_servo(1, SERVO_RANGES[1]["max"])  # Left Upper
-        move_servo(4, SERVO_RANGES[4]["min"])  # Right Upper
-        move_servo(5, SERVO_RANGES[5]["max"])  # Right Lower
+    """Set both eyelids position: 'open', 'mid', 'squint', or 'closed'"""
+    state.target_position = position
+    base_positions = get_base_positions(position)
+    
+    move_servo(0, base_positions[0])  # Left Lower
+    move_servo(1, base_positions[1])  # Left Upper
+    move_servo(4, base_positions[4])  # Right Upper
+    move_servo(5, base_positions[5])  # Right Lower
+
+def calculate_vertical_offset():
+    """Calculate the vertical offset based on eye position"""
+    vertical_range = SERVO_RANGES[3]["max"] - SERVO_RANGES[3]["min"]
+    current_position = state.eye_position["y"] - SERVO_RANGES[3]["min"]
+    return (current_position / vertical_range - 0.5) * VERTICAL_LID_MODIFIER
+
+def get_upper_lid_positions(base_positions):
+    """Get upper lid positions with current vertical offset applied"""
+    offset = calculate_vertical_offset()
+    left_range = SERVO_RANGES[1]["max"] - SERVO_RANGES[1]["min"]
+    right_range = SERVO_RANGES[4]["max"] - SERVO_RANGES[4]["min"]
+    
+    return {
+        'left': base_positions[1] + (left_range * offset),
+        'right': base_positions[4] - (right_range * offset)
+    }
+
+def set_eyelids_position(position="open"):
+    """Set both eyelids position: 'open', 'mid', 'squint', or 'closed'"""
+    state.target_position = position
+    base_positions = get_base_positions(position)
+    
+    # Set lower lids
+    move_servo(0, base_positions[0])  # Left Lower
+    move_servo(5, base_positions[5])  # Right Lower
+    
+    # Set upper lids with current vertical offset
+    if position != "closed":  # Don't apply offset when closing
+        upper_positions = get_upper_lid_positions(base_positions)
+        state.left_upper_lid_position = upper_positions['left']
+        state.right_upper_lid_position = upper_positions['right']
+    else:
+        state.left_upper_lid_position = base_positions[1]
+        state.right_upper_lid_position = base_positions[4]
+    
+    move_servo(1, state.left_upper_lid_position)  # Left Upper
+    move_servo(4, state.right_upper_lid_position)  # Right Upper
 
 def update_upper_lids_vertical():
     """Update upper lid positions based on vertical eye position"""
     if state.is_blinking:
         return
 
-    vertical_range = SERVO_RANGES[3]["max"] - SERVO_RANGES[3]["min"]
-    current_position = state.eye_position["y"] - SERVO_RANGES[3]["min"]
-    modifier = (current_position / vertical_range - 0.5) * VERTICAL_LID_MODIFIER
+    base_positions = get_base_positions(state.target_position)
+    upper_positions = get_upper_lid_positions(base_positions)
 
     if state.left_trigger_value < 10:
-        base = EYELID_MID[1] if state.use_mid_position else SERVO_RANGES[1]["max"]
-        state.left_upper_lid_position = base + (SERVO_RANGES[1]["max"] - SERVO_RANGES[1]["min"]) * modifier
+        state.left_upper_lid_position = upper_positions['left']
         move_servo(1, state.left_upper_lid_position)
 
     if state.right_trigger_value < 10:
-        base = EYELID_MID[4] if state.use_mid_position else SERVO_RANGES[4]["min"]
-        state.right_upper_lid_position = base - (SERVO_RANGES[4]["max"] - SERVO_RANGES[4]["min"]) * modifier
+        state.right_upper_lid_position = upper_positions['right']
         move_servo(4, state.right_upper_lid_position)
+
+def update_eyelid_position(side="left", trigger_value=0):
+    """Update eyelid position based on trigger value (0-255)"""
+    if side == "left":
+        if trigger_value < 10:  # Return to stored position when released
+            move_servo(1, state.left_upper_lid_position)
+            base_positions = get_base_positions(state.target_position)
+            move_servo(0, base_positions[0])
+        else:
+            upper_angle = map_value(trigger_value, 0, 255, 
+                                  SERVO_RANGES[1]["max"], SERVO_RANGES[1]["min"])
+            lower_angle = map_value(trigger_value, 0, 255, 
+                                  SERVO_RANGES[0]["min"], SERVO_RANGES[0]["max"])
+            move_servo(1, upper_angle)
+            move_servo(0, lower_angle)
+    else:
+        if trigger_value < 10:  # Return to stored position when released
+            move_servo(4, state.right_upper_lid_position)
+            base_positions = get_base_positions(state.target_position)
+            move_servo(5, base_positions[5])
+        else:
+            upper_angle = map_value(trigger_value, 0, 255, 
+                                  SERVO_RANGES[4]["min"], SERVO_RANGES[4]["max"])
+            lower_angle = map_value(trigger_value, 0, 255, 
+                                  SERVO_RANGES[5]["max"], SERVO_RANGES[5]["min"])
+            move_servo(4, upper_angle)
+            move_servo(5, lower_angle)
 
 def blink():
     """Perform a blink animation"""
@@ -139,15 +226,12 @@ def blink():
         return
 
     state.is_blinking = True
+    previous_position = state.target_position
     
     set_eyelids_position("closed")
     time.sleep(0.2)
-
-    if state.use_mid_position:
-        set_eyelids_position("mid")
-    else:
-        set_eyelids_position("open")
-
+    
+    set_eyelids_position(previous_position)
     update_upper_lids_vertical()
     
     state.is_blinking = False
@@ -171,22 +255,28 @@ def process_gamepad():
                 if event.code == "BTN_SELECT" and event.state == 1:  # Back button
                     cleanup()
                     
-                elif event.code == "ABS_Z":  # Left trigger (Button 11)
+                elif event.code == "ABS_Z":  # Left trigger
                     state.left_trigger_value = event.state
                     update_eyelid_position("left", event.state)
                     
-                elif event.code == "ABS_RZ":  # Right trigger (Button 12)
+                elif event.code == "ABS_RZ":  # Right trigger
                     state.right_trigger_value = event.state
                     update_eyelid_position("right", event.state)
                     
                 elif event.code == "BTN_TR" and event.state == 1:  # RB button
-                    state.use_mid_position = not state.use_mid_position
+                    if state.target_position == "squint":
+                        state.target_position = "mid"
+                    state.target_position = "open" if state.target_position == "mid" else "mid"
                     if not state.is_blinking:
-                        if state.use_mid_position:
-                            set_eyelids_position("mid")
-                        else:
-                            set_eyelids_position("open")
+                        set_eyelids_position(state.target_position)
                         update_upper_lids_vertical()
+
+                elif event.code == "BTN_TL" and event.state == 1:  # LB button
+                    if state.target_position != "squint":
+                        set_eyelids_position("squint")
+                    else:
+                        set_eyelids_position("mid")
+                    update_upper_lids_vertical()
                     
                 elif event.code == "ABS_X":  # Left stick X-axis
                     x_angle = map_value(event.state, -32768, 32767,
@@ -233,6 +323,7 @@ if __name__ == "__main__":
         print("Press left analog stick to manually blink")
         print("Use LT/RT to control left/right eyelid closure")
         print("Press RB to toggle between full open and mid position")
+        print("Press LB to toggle squint position")
 
         # Open eyes at start
         set_eyelids_position("mid")
