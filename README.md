@@ -9,7 +9,7 @@ Control animatronic eyes using a Raspberry Pi Zero and gamepad controller. Featu
 - Gamepad-based control of eye movements (horizontal and vertical)
 - Automatic random blinking
 - Manual blink control
-- Adjustable eyelid positions (open, mid, closed)
+- Adjustable eyelid positions (open, mid, squint, closed)
 - Eyelids follow vertical eye movement for natural expressions
 - Clean shutdown with neutral position
 
@@ -17,7 +17,7 @@ Control animatronic eyes using a Raspberry Pi Zero and gamepad controller. Featu
 
 - Raspberry Pi Zero (Tested on Pi Zero and Pi 3)
 - PCA9685 16-channel PWM/Servo controller
-- 6 micro servos:
+- 6 micro servos: 
   - 2 for horizontal and vertical eye movement
   - 4 for upper and lower eyelids (2 per eye)
 - USB gamepad controller (Tested with Xbox-compatible)
