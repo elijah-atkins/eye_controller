@@ -90,10 +90,11 @@ python3 eye_controller.py
 ```
 
 2. Controls:
-   - Left analog stick: Control eye movement
-   - Left stick press: Manual blink
-   - Right trigger (RT): Toggle between full open and mid position
-   - Ctrl+C: Clean exit (moves to neutral position)
+  - Use left analog stick to control eye movement")
+  - Press left analog stick to manually blink")
+  - Use LT/RT to control left/right eyelid closure")
+  - Press RB to toggle between full open and mid position")
+  - Press LB to toggle squint position")
 
 ## Customization
 
