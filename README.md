@@ -38,57 +38,120 @@ The code uses the following servo assignments:
 
 ## Installation
 
-Enable I2C on your Raspberry Pi:
-```
+Here's a complete setup guide from start to finish:
+
+1. Initial Raspberry Pi Setup:
+```bash
 sudo raspi-config
-# Navigate to Interface Options > I2C > Enable
-# Enable SSH for remote communication 
-# Enable Auto Login(Optional)
+```
+Navigate to:
+- Interface Options
+  - I2C → Enable
+  - SSH → Enable 
+- System Options
+  - Boot / Auto Login → Console Autologin
+  
+Reboot after changes:
+```bash
+sudo reboot
 ```
 
-Install required packages:
-```
+2. Install Base Requirements:
+```bash
 sudo apt-get update
-sudo apt-get install python3-pip python3-smbus
-pip3 install adafruit-circuitpython-pca9685 adafruit-circuitpython-motor adafruit-blinka inputs
+sudo apt-get install python3-pip i2c-tools git
 ```
-Create a new directory for the project:
+
+3. Verify I2C connection:
+```bash
+sudo i2cdetect -y 1
+# Should show PCA9685 device (usually at address 0x40)
 ```
+
+4. Create Project Directory:
+```bash
 mkdir eye_controller
 cd eye_controller
 ```
 
-Using your preferred text editor (like nano), create a new file called eye_controller.py:
+5. Virtual Environment Setup (Optional but recommended):
+```bash
+# Create virtual environment
+python3 -m venv eye_venv
+
+# Activate virtual environment
+source eye_venv/bin/activate
+
+# Install required packages
+pip install adafruit-circuitpython-pca9685 adafruit-circuitpython-motor inputs
 ```
-nano eye_controller.py
+
+Note: If you choose not to use a virtual environment, you can install packages globally with:
+```bash
+sudo pip3 install adafruit-circuitpython-pca9685 adafruit-circuitpython-motor inputs
 ```
-Copy and paste the entire code into this file. Press Ctrl+X, then Y, then Enter to save in nano.
 
-#The script uses the following Python modules:
+6. Create the Python Script:
+```bash
+# Save the code as eye_control.py
+nano eye_control.py
+# Paste the code and save (Ctrl+O, Enter, Ctrl+X)
 
-board (from adafruit-blinka)
-busio (from adafruit-blinka)
-adafruit_pca9685
-adafruit_motor
-inputs
-Standard Python libraries: time, math, threading, signal, sys, random
+# Make executable
+chmod +x eye_control.py
+```
+## Setup Autorun 
 
+1. Create Service File:
+```bash
+sudo nano /etc/systemd/system/eye-control.service
+```
 
+Add this content:
+```ini
+[Unit]
+Description=Animatronic Eye Control
+After=network.target
 
-Connect the hardware:
-   - Connect PCA9685 to Pi's I2C pins:
-     - SDA → GPIO 2 (Pin 3)
-     - SCL → GPIO 3 (Pin 5)
-     - VCC → 3.3V
-     - GND → Ground
-   - Connect servos to PCA9685 channels 0-5
-   - Connect USB gamepad to Pi
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/eye_controller
+ExecStart=/home/pi/eye_controller/eye_venv/bin/python /home/pi/eye_controller/eye_control.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+```
+*replace your USER_NAME with pi
+
+If not using virtual environment, modify ExecStart to:
+```ini
+ExecStart=/usr/bin/python3 /home/pi/eye_controller/eye_control.py
+```
+
+2. Enable and Start Service:
+```bash
+sudo systemctl enable eye-control
+sudo systemctl start eye-control
+```
+
+3. Check Service Status:
+```bash
+sudo systemctl status eye-control
+```
+For troubleshooting, check service logs:
+```bash
+journalctl -u eye-control -f
+```
 
 ## Usage
 
-1. Start the controller:
+1. If service was enabled the controller will start at bootup
+   
+1(alternative). Start the controller:
 ```bash
-python3 eye_controller.py
+python3 eye_control.py
 ```
 
 2. Controls:
