@@ -15,7 +15,7 @@ Control animatronic eyes using a Raspberry Pi Zero and gamepad controller. Featu
 
 ## Hardware Requirements
 
-- Raspberry Pi Zero (Tested on Pi Zero and Pi 3)
+- Raspberry Pi (Tested on Pi Zero and Pi 3)
 - PCA9685 16-channel PWM/Servo controller
 - 6 micro servos: 
   - 2 for horizontal and vertical eye movement
