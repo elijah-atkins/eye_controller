@@ -201,22 +201,40 @@ def update_eyelid_position(side="left", trigger_value=0):
             base_positions = get_base_positions(state.target_position)
             move_servo(0, base_positions[0])
         else:
-            upper_angle = map_value(trigger_value, 0, 255, 
-                                  SERVO_RANGES[1]["max"], SERVO_RANGES[1]["min"])
-            lower_angle = map_value(trigger_value, 0, 255, 
-                                  SERVO_RANGES[0]["min"], SERVO_RANGES[0]["max"])
+            # Map trigger to a percentage of closure from current position
+            closure_percent = trigger_value / 255.0
+            
+            # Calculate upper lid position as a transition from current to closed
+            current_upper = state.left_upper_lid_position
+            target_upper = SERVO_RANGES[1]["min"]  # Closed position
+            upper_angle = current_upper + (target_upper - current_upper) * closure_percent
+            
+            # Calculate lower lid position as a transition from open to closed
+            current_lower = SERVO_RANGES[0]["min"]  # Always start from open for lower lid
+            target_lower = SERVO_RANGES[0]["max"]  # Closed position
+            lower_angle = current_lower + (target_lower - current_lower) * closure_percent
+            
             move_servo(1, upper_angle)
             move_servo(0, lower_angle)
-    else:
+    else:  # right side
         if trigger_value < 10:  # Return to stored position when released
             move_servo(4, state.right_upper_lid_position)
             base_positions = get_base_positions(state.target_position)
             move_servo(5, base_positions[5])
         else:
-            upper_angle = map_value(trigger_value, 0, 255, 
-                                  SERVO_RANGES[4]["min"], SERVO_RANGES[4]["max"])
-            lower_angle = map_value(trigger_value, 0, 255, 
-                                  SERVO_RANGES[5]["max"], SERVO_RANGES[5]["min"])
+            # Map trigger to a percentage of closure from current position
+            closure_percent = trigger_value / 255.0
+            
+            # Calculate upper lid position as a transition from current to closed
+            current_upper = state.right_upper_lid_position
+            target_upper = SERVO_RANGES[4]["max"]  # Closed position
+            upper_angle = current_upper + (target_upper - current_upper) * closure_percent
+            
+            # Calculate lower lid position as a transition from open to closed
+            current_lower = SERVO_RANGES[5]["max"]  # Always start from open for lower lid
+            target_lower = SERVO_RANGES[5]["min"]  # Closed position
+            lower_angle = current_lower + (target_lower - current_lower) * closure_percent
+            
             move_servo(4, upper_angle)
             move_servo(5, lower_angle)
 
