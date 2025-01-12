@@ -113,7 +113,7 @@ SERVO_RANGES = {
 
 Other adjustable parameters:
 - `VERTICAL_LID_MODIFIER`: Controls how much the eyelids follow vertical eye movement
-- `blink_interval`: Random time between automatic blinks (default 3-8 seconds)
+- `blink_interval`: Random time between automatic blinks (default 4-9 seconds)
 
 ## Troubleshooting
 
