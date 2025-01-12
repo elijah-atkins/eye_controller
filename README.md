@@ -74,7 +74,7 @@ mkdir eye_controller
 cd eye_controller
 ```
 
-5. Virtual Environment Setup (Optional but recommended. Needed for pi zero to resolve externally-managed-environment errors):
+5. Virtual Environment Setup (Optional but recommended):
 ```bash
 # Create virtual environment
 python3 -m venv eye_venv
@@ -89,6 +89,7 @@ pip install adafruit-circuitpython-pca9685 adafruit-circuitpython-motor inputs
 Note: If you choose not to use a virtual environment, you can install packages globally with:
 ```bash
 sudo pip3 install adafruit-circuitpython-pca9685 adafruit-circuitpython-motor inputs
+# if you get externally-managed-environment errors use Virtual Environment Setup
 ```
 
 6. Create the Python Script:
