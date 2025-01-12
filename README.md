@@ -74,7 +74,7 @@ mkdir eye_controller
 cd eye_controller
 ```
 
-5. Virtual Environment Setup (Optional but recommended for pi zero):
+5. Virtual Environment Setup (Optional but recommended for pi zero to resolve externally-managed-environment errors):
 ```bash
 # Create virtual environment
 python3 -m venv eye_venv
