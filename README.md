@@ -42,6 +42,8 @@ Enable I2C on your Raspberry Pi:
 ```
 sudo raspi-config
 # Navigate to Interface Options > I2C > Enable
+# Enable SSH for remote communication 
+# Enable Auto Login(Optional)
 ```
 
 Install required packages:
